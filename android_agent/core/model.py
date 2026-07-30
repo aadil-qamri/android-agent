@@ -7,7 +7,7 @@ from __future__ import annotations
 from google import genai
 from google.genai import types
 
-from android_agent.config import LOCATION, MODEL_NAME, PROJECT_ID
+from android_agent.core.config import LOCATION, MODEL_NAME, PROJECT_ID
 from android_agent.prompt import SYSTEM_PROMPT
 
 

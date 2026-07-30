@@ -6,7 +6,7 @@ This class is the brain of the application.
 
 from __future__ import annotations
 
-from android_agent.model import ModelProvider
+from android_agent.core.model import ModelProvider
 
 
 class AndroidAgent:

@@ -4,8 +4,8 @@ Command Line Interface for Android Agent.
 
 from __future__ import annotations
 
-from android_agent.agent import AndroidAgent
-from android_agent.config import APP_NAME, VERSION
+from android_agent.core.agent import AndroidAgent
+from android_agent.core.config import APP_NAME, VERSION
 
 
 def run() -> None:
