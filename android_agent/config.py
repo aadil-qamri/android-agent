@@ -24,7 +24,7 @@ LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 # Gemini Model Configuration
 # -----------------------------------------------------------------------------
 
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-3.5-flash")
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")
 
 # -----------------------------------------------------------------------------
 # Application

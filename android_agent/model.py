@@ -1,36 +1,39 @@
 """
-Vertex AI model wrapper.
-
-Only this file should communicate directly with Vertex AI.
+Model provider backed by the Google Gen AI SDK.
 """
 
 from __future__ import annotations
 
-import vertexai
-from vertexai.generative_models import GenerativeModel
+from google import genai
+from google.genai import types
 
-from android_agent.config import (
-    LOCATION,
-    MODEL_NAME,
-)
+from android_agent.config import LOCATION, MODEL_NAME, PROJECT_ID
 from android_agent.prompt import SYSTEM_PROMPT
 
 
 class ModelProvider:
-    """Handles all communication with Vertex AI."""
+    """Wrapper around the Google Gen AI SDK."""
 
     def __init__(self) -> None:
-        vertexai.init(location=LOCATION)
-
-        self._model = GenerativeModel(
-            MODEL_NAME,
-            system_instruction=[SYSTEM_PROMPT],
+        self.client = genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION,
         )
 
-        self._chat = self._model.start_chat()
+        self.chat = self.client.chats.create(
+            model=MODEL_NAME,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+            ),
+        )
 
     def send(self, message: str) -> str:
-        """Send a message to Gemini and return its response."""
+        """Send a message to Gemini and return the response."""
 
-        response = self._chat.send_message(message)
-        return response.text.strip()
+        response = self.chat.send_message(message)
+
+        if response.text:
+            return response.text.strip()
+
+        return "The model returned an empty response."
