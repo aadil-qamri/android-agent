@@ -1,0 +1,42 @@
+[
+    {
+        "name": "TranSystemUI.apk",
+        "path": "knowledge/android11/raw/TranSystemUI.apk",
+        "parent": "knowledge/android11/raw",
+        "extension": ".apk",
+        "type": "apk",
+        "size": 39119435,
+        "modified": 1785498041.3525538,
+        "sha256": "52e45c83b04d2ee3052dbfe53be256e6fa621d1259418db9c2697476ee779f1b"
+    },
+    {
+        "name": "framework-res.apk",
+        "path": "knowledge/android11/raw/framework-res.apk",
+        "parent": "knowledge/android11/raw",
+        "extension": ".apk",
+        "type": "apk",
+        "size": 53935599,
+        "modified": 1785498027.008345,
+        "sha256": "6a1eb714a4acbf790bfcac26c0b34a360f5f4725e5d514207a24f6ae333abff2"
+    },
+    {
+        "name": "framework.jar",
+        "path": "knowledge/android11/raw/framework.jar",
+        "parent": "knowledge/android11/raw",
+        "extension": ".jar",
+        "type": "jar",
+        "size": 30635417,
+        "modified": 1785498004.8750222,
+        "sha256": "92f583177dfa1b27dbebb94506cb645894083db4876389a134bfbde7e0b6b0cd"
+    },
+    {
+        "name": "services.jar",
+        "path": "knowledge/android11/raw/services.jar",
+        "parent": "knowledge/android11/raw",
+        "extension": ".jar",
+        "type": "jar",
+        "size": 16105220,
+        "modified": 1785498031.1894057,
+        "sha256": "feb04d70d56c69f456cc6e2730dad1da4d34b212c5045b2fe19fc4684afc9fd1"
+    }
+]
