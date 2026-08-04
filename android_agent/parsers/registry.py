@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from android_agent.parsers.base import BaseParser
 from android_agent.parsers.build_prop import BuildPropParser
+from android_agent.parsers.jar import JarParser
 
 
 class ParserRegistry:
@@ -15,6 +16,7 @@ class ParserRegistry:
         self._parsers: dict[str, BaseParser] = {}
 
         self.register(BuildPropParser())
+        self.register(JarParser())
 
     def register(self, parser: BaseParser) -> None:
         """
