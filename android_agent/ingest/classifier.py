@@ -43,7 +43,7 @@ class Classifier:
 
         path = Path(path)
 
-        if path.name == "build.prop":
+        if path.suffix.lower() == ".prop":
             return "build_prop"
 
         if path.name.endswith(".xml") and "permissions" in path.parts:

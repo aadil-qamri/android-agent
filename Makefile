@@ -17,4 +17,4 @@ clean:
 	find . -type f -name "*.pyc" -delete
 
 ingest:
-	python ingest_knowledge.py knowledge/android11/raw
+	python ingest_knowledge.py knowledge/android11

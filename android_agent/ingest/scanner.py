@@ -46,6 +46,10 @@ class Scanner:
                 continue
 
             if path.is_file():
+                # Ignore generated index files
+                if path.name == "index.json":
+                    continue
+
                 files.append(path)
 
         return sorted(files)

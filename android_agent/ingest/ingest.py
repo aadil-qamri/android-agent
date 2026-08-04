@@ -12,6 +12,7 @@ from pathlib import Path
 from android_agent.ingest.classifier import Classifier
 from android_agent.ingest.metadata import MetadataExtractor
 from android_agent.ingest.scanner import Scanner
+from android_agent.parsers.registry import ParserRegistry
 
 
 class Ingestor:
@@ -22,6 +23,7 @@ class Ingestor:
         self.scanner = Scanner(self.root)
         self.classifier = Classifier()
         self.metadata = MetadataExtractor()
+        self.registry = ParserRegistry()
 
     def ingest(self) -> list[dict]:
         """
@@ -35,10 +37,18 @@ class Ingestor:
 
         for file in self.scanner.scan():
             file_type = self.classifier.classify(file)
+
             record = self.metadata.extract(file, file_type)
+
+            parser = self.registry.get(file_type)
+
+            if parser is not None:
+                record["parsed"] = parser.parse(file)
+
             records.append(record)
 
         return records
+    
 
     def save(
         self,

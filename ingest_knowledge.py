@@ -24,7 +24,7 @@ def main() -> None:
 
     records = ingestor.ingest()
 
-    output = root.parent / "index.json"
+    output = root / "index.json"
 
     ingestor.save(output, records)
 
