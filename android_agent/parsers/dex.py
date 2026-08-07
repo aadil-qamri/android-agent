@@ -30,7 +30,7 @@ class DexParser(BaseParser):
 
         path = Path(path)
 
-        classes = []
+        class_records = []
         packages = set()
 
         try:
@@ -39,11 +39,21 @@ class DexParser(BaseParser):
 
             for cls in dex.get_classes():
                 name = cls.get_name()
-                classes.append(name)
+
+                # TODO:
+                # Handle DEX classes without a package path.
 
                 package = name[1:].rsplit("/", 1)[0]
                 packages.add(package)
 
+                class_records.append(
+                    {
+                        "name": name,
+                        "superclass": cls.get_superclassname(),
+                        "interfaces": cls.get_interfaces(),
+                        "access": cls.get_access_flags_string(),
+                    }
+                )
         except Exception as e:
             return {
             "type": "dex",
@@ -56,10 +66,10 @@ class DexParser(BaseParser):
             }
 
         return {
-    "type": "dex",
-    "name": path.name,
-    "class_count": len(classes),
-    "package_count": len(packages),
-    "classes": classes,
-    "packages": sorted(packages),
-    }
+            "type": "dex",
+            "name": path.name,
+            "class_count": len(class_records),
+            "package_count": len(packages),
+            "classes": class_records,
+            "packages": sorted(packages),
+        }
