@@ -46,14 +46,26 @@ class DexParser(BaseParser):
                 package = name[1:].rsplit("/", 1)[0]
                 packages.add(package)
 
-                class_records.append(
+                methods = []
+
+                for method in cls.get_methods():
+                    methods.append(
                     {
-                        "name": name,
-                        "superclass": cls.get_superclassname(),
-                        "interfaces": cls.get_interfaces(),
-                        "access": cls.get_access_flags_string(),
-                    }
-                )
+                    "name": method.get_name(),
+                    "descriptor": method.get_descriptor(),
+                    "access": method.get_access_flags_string()
+                }
+            )
+
+                class_records.append(
+            {
+                "name": name,
+                "superclass": cls.get_superclassname(),
+                "interfaces": cls.get_interfaces(),
+                "access": cls.get_access_flags_string(),
+                "methods": methods,
+            }
+        )
         except Exception as e:
             return {
             "type": "dex",
