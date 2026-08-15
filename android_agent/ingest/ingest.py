@@ -13,6 +13,7 @@ from android_agent.ingest.classifier import Classifier
 from android_agent.ingest.metadata import MetadataExtractor
 from android_agent.ingest.scanner import Scanner
 from android_agent.parsers.registry import ParserRegistry
+from android_agent.storage.bytecode import BytecodeStore
 
 
 class Ingestor:
@@ -20,10 +21,15 @@ class Ingestor:
 
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
+
         self.scanner = Scanner(self.root)
         self.classifier = Classifier()
         self.metadata = MetadataExtractor()
-        self.registry = ParserRegistry()
+
+        bytecode_path = self.root / "bytecode.db"
+        self.bytecode_store = BytecodeStore(bytecode_path)
+
+        self.registry = ParserRegistry(self.bytecode_store)
 
     def ingest(self) -> list[dict]:
         """
@@ -47,8 +53,9 @@ class Ingestor:
 
             records.append(record)
 
+        self.bytecode_store.commit()
+
         return records
-    
 
     def save(
         self,
@@ -69,3 +76,8 @@ class Ingestor:
                 indent=4,
                 ensure_ascii=False,
             )
+
+    def close(self) -> None:
+        """Close the bytecode database."""
+
+        self.bytecode_store.close()

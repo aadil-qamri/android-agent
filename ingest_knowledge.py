@@ -21,15 +21,17 @@ def main() -> None:
     root = Path(sys.argv[1])
 
     ingestor = Ingestor(root)
+    try:
+        records = ingestor.ingest()
 
-    records = ingestor.ingest()
+        output = root / "index.json"
 
-    output = root / "index.json"
+        ingestor.save(output, records)
+        print(f"Ingested {len(records)} files.")
+        print(f"Saved index to: {output}")
 
-    ingestor.save(output, records)
-
-    print(f"Ingested {len(records)} files.")
-    print(f"Saved index to: {output}")
+    finally:
+        ingestor.close()
 
 
 if __name__ == "__main__":

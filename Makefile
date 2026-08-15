@@ -18,3 +18,5 @@ clean:
 
 ingest:
 	python ingest_knowledge.py knowledge/android11
+venv:
+	source .venv/bin/activate && python --version

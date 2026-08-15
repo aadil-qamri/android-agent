@@ -7,16 +7,17 @@ from __future__ import annotations
 from android_agent.parsers.base import BaseParser
 from android_agent.parsers.build_prop import BuildPropParser
 from android_agent.parsers.jar import JarParser
+from android_agent.storage.bytecode import BytecodeStore
 
 
 class ParserRegistry:
     """Registry of available parsers."""
 
-    def __init__(self) -> None:
+    def __init__(self, bytecode_store: BytecodeStore) -> None:
         self._parsers: dict[str, BaseParser] = {}
 
         self.register(BuildPropParser())
-        self.register(JarParser())
+        self.register(JarParser(bytecode_store))
 
     def register(self, parser: BaseParser) -> None:
         """
