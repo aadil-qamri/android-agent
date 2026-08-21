@@ -41,12 +41,14 @@ class AndroidKnowledgeTool:
         self,
         name: str,
         limit: int = 20,
+        class_name: str | None = None,
     ) -> list[dict[str, Any]]:
         """Search for Android methods by name."""
 
         return self.store.find_methods(
             name=name,
             limit=limit,
+            class_name=class_name,
         )
 
     def get_method_instructions(

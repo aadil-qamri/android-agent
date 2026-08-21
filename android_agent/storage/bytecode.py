@@ -293,10 +293,7 @@ class BytecodeStore:
             (class_id,),
         ).fetchall()
 
-        result["interfaces"] = [
-            row["interface"]
-            for row in interfaces
-        ]
+        result["interfaces"] = [row["interface"] for row in interfaces]
 
         return result
 
@@ -304,11 +301,11 @@ class BytecodeStore:
         self,
         name: str,
         limit: int = 50,
+        class_name: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Find methods whose names contain the supplied text."""
+        """Find methods by name, optionally restricted to a class."""
 
-        rows = self.connection.execute(
-            """
+        query = """
             SELECT
                 m.id,
                 m.class_id,
@@ -320,10 +317,26 @@ class BytecodeStore:
             JOIN classes AS c
                 ON c.id = m.class_id
             WHERE m.name LIKE ?
+        """
+
+        parameters: list[Any] = [f"%{name}%"]
+
+        if class_name is not None:
+            query += """
+                AND c.name = ?
+            """
+            parameters.append(class_name)
+
+        query += """
             ORDER BY c.name, m.name, m.descriptor
             LIMIT ?
-            """,
-            (f"%{name}%", limit),
+        """
+
+        parameters.append(limit)
+
+        rows = self.connection.execute(
+            query,
+            parameters,
         ).fetchall()
 
         return [dict(row) for row in rows]
