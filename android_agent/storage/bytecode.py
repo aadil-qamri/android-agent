@@ -8,16 +8,18 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 
 class BytecodeStore:
-    """Store DEX classes, methods, and instructions in SQLite."""
+    """Store and query detailed DEX bytecode data."""
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
         self.connection = sqlite3.connect(self.path)
+        self.connection.row_factory = sqlite3.Row
         self.connection.execute("PRAGMA foreign_keys = ON")
 
         self._create_schema()
@@ -100,6 +102,10 @@ class BytecodeStore:
         )
 
         self.connection.commit()
+
+    # ------------------------------------------------------------------
+    # Insert methods
+    # ------------------------------------------------------------------
 
     def add_dex_file(
         self,
@@ -214,6 +220,140 @@ class BytecodeStore:
         )
 
         return cursor.lastrowid
+
+    # ------------------------------------------------------------------
+    # Query methods
+    # ------------------------------------------------------------------
+
+    def find_classes(
+        self,
+        name: str,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Find classes whose names contain the supplied text."""
+
+        rows = self.connection.execute(
+            """
+            SELECT
+                c.id,
+                c.dex_id,
+                c.name,
+                c.superclass,
+                c.access,
+                d.jar_name,
+                d.dex_name
+            FROM classes AS c
+            JOIN dex_files AS d
+                ON d.id = c.dex_id
+            WHERE c.name LIKE ?
+            ORDER BY c.name
+            LIMIT ?
+            """,
+            (f"%{name}%", limit),
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+
+    def get_class(
+        self,
+        class_id: int,
+    ) -> dict[str, Any] | None:
+        """Return a class and its interfaces."""
+
+        row = self.connection.execute(
+            """
+            SELECT
+                c.id,
+                c.dex_id,
+                c.name,
+                c.superclass,
+                c.access,
+                d.jar_name,
+                d.dex_name
+            FROM classes AS c
+            JOIN dex_files AS d
+                ON d.id = c.dex_id
+            WHERE c.id = ?
+            """,
+            (class_id,),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        result = dict(row)
+
+        interfaces = self.connection.execute(
+            """
+            SELECT interface
+            FROM class_interfaces
+            WHERE class_id = ?
+            ORDER BY interface
+            """,
+            (class_id,),
+        ).fetchall()
+
+        result["interfaces"] = [
+            row["interface"]
+            for row in interfaces
+        ]
+
+        return result
+
+    def find_methods(
+        self,
+        name: str,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Find methods whose names contain the supplied text."""
+
+        rows = self.connection.execute(
+            """
+            SELECT
+                m.id,
+                m.class_id,
+                m.name,
+                m.descriptor,
+                m.access,
+                c.name AS class_name
+            FROM methods AS m
+            JOIN classes AS c
+                ON c.id = m.class_id
+            WHERE m.name LIKE ?
+            ORDER BY c.name, m.name, m.descriptor
+            LIMIT ?
+            """,
+            (f"%{name}%", limit),
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+
+    def get_instructions(
+        self,
+        method_id: int,
+    ) -> list[dict[str, Any]]:
+        """Return all instructions belonging to a method."""
+
+        rows = self.connection.execute(
+            """
+            SELECT
+                id,
+                method_id,
+                offset,
+                opcode,
+                output
+            FROM instructions
+            WHERE method_id = ?
+            ORDER BY offset
+            """,
+            (method_id,),
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+
+    # ------------------------------------------------------------------
+    # Transaction / lifecycle methods
+    # ------------------------------------------------------------------
 
     def commit(self) -> None:
         """Commit pending database changes."""
