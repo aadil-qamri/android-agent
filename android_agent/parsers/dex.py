@@ -7,6 +7,7 @@ Parser for Dalvik Executable (DEX) files.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from androguard.core.dex import DEX
 
@@ -17,12 +18,71 @@ from android_agent.storage.bytecode import BytecodeStore
 class DexParser(BaseParser):
     """Parser for Dalvik Executable (DEX) files."""
 
+    INVOKE_OPCODES = {
+        "invoke-direct",
+        "invoke-virtual",
+        "invoke-static",
+        "invoke-interface",
+        "invoke-super",
+    }
+
     def __init__(self, bytecode_store: BytecodeStore) -> None:
         self.bytecode_store = bytecode_store
 
     @property
     def supported_types(self) -> list[str]:
         return ["dex"]
+
+    @staticmethod
+    def _extract_method_reference(
+        instruction: Any,
+    ) -> tuple[str, str, str] | None:
+        """Extract a referenced method from an invoke instruction."""
+
+        opcode = instruction.get_name()
+
+        if opcode not in DexParser.INVOKE_OPCODES:
+            return None
+
+        operands = instruction.get_operands()
+
+        if not operands:
+            return None
+
+        reference = operands[-1]
+
+        if not isinstance(reference, tuple) or len(reference) < 3:
+            return None
+
+        reference_text = reference[-1]
+
+        if not isinstance(reference_text, str):
+            return None
+
+        separator = reference_text.find("->")
+
+        if separator == -1:
+            return None
+
+        target_class = reference_text[:separator]
+        method_reference = reference_text[separator + 2 :]
+
+        descriptor_start = method_reference.find("(")
+
+        if descriptor_start == -1:
+            return None
+
+        target_method = method_reference[:descriptor_start]
+        target_descriptor = method_reference[descriptor_start:]
+
+        if not target_class or not target_method or not target_descriptor:
+            return None
+
+        return (
+            target_class,
+            target_method,
+            target_descriptor,
+        )
 
     def parse(
         self,
@@ -88,12 +148,34 @@ class DexParser(BaseParser):
                         offset = 0
 
                         for instruction in method.get_instructions():
+                            opcode = instruction.get_name()
+                            output = instruction.get_output()
+
                             self.bytecode_store.add_instruction(
                                 method_id=method_id,
                                 offset=offset,
-                                opcode=instruction.get_name(),
-                                output=instruction.get_output(),
+                                opcode=opcode,
+                                output=output,
                             )
+
+                            method_reference = self._extract_method_reference(
+                                instruction
+                            )
+
+                            if method_reference is not None:
+                                (
+                                    target_class,
+                                    target_method,
+                                    target_descriptor,
+                                ) = method_reference
+
+                                self.bytecode_store.add_method_call(
+                                    caller_method_id=method_id,
+                                    target_class=target_class,
+                                    target_method=target_method,
+                                    target_descriptor=target_descriptor,
+                                    opcode=opcode,
+                                )
 
                             offset += instruction.get_length() // 2
 

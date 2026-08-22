@@ -78,6 +78,18 @@ class BytecodeStore:
                     ON DELETE CASCADE
             );
 
+            CREATE TABLE IF NOT EXISTS method_calls (
+                id INTEGER PRIMARY KEY,
+                caller_method_id INTEGER NOT NULL,
+                target_class TEXT NOT NULL,
+                target_method TEXT NOT NULL,
+                target_descriptor TEXT NOT NULL,
+                opcode TEXT NOT NULL,
+                FOREIGN KEY (caller_method_id)
+                    REFERENCES methods(id)
+                    ON DELETE CASCADE
+            );
+
             CREATE INDEX IF NOT EXISTS idx_classes_dex_id
                 ON classes(dex_id);
 
@@ -98,6 +110,16 @@ class BytecodeStore:
 
             CREATE INDEX IF NOT EXISTS idx_instructions_method_offset
                 ON instructions(method_id, offset);
+
+            CREATE INDEX IF NOT EXISTS idx_method_calls_caller
+                ON method_calls(caller_method_id);
+
+            CREATE INDEX IF NOT EXISTS idx_method_calls_target
+                ON method_calls(
+                    target_class,
+                    target_method,
+                    target_descriptor
+                );
             """
         )
 
@@ -221,6 +243,38 @@ class BytecodeStore:
 
         return cursor.lastrowid
 
+    def add_method_call(
+        self,
+        caller_method_id: int,
+        target_class: str,
+        target_method: str,
+        target_descriptor: str,
+        opcode: str,
+    ) -> int:
+        """Add a method call relationship and return its database ID."""
+
+        cursor = self.connection.execute(
+            """
+            INSERT INTO method_calls (
+                caller_method_id,
+                target_class,
+                target_method,
+                target_descriptor,
+                opcode
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                caller_method_id,
+                target_class,
+                target_method,
+                target_descriptor,
+                opcode,
+            ),
+        )
+
+        return cursor.lastrowid
+
     # ------------------------------------------------------------------
     # Query methods
     # ------------------------------------------------------------------
@@ -302,8 +356,9 @@ class BytecodeStore:
         name: str,
         limit: int = 50,
         class_name: str | None = None,
+        descriptor: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Find methods by name, optionally restricted to a class."""
+        """Find methods by name, optionally restricted by class and descriptor."""
 
         query = """
             SELECT
@@ -326,6 +381,12 @@ class BytecodeStore:
                 AND c.name = ?
             """
             parameters.append(class_name)
+
+        if descriptor is not None:
+            query += """
+                AND m.descriptor = ?
+            """
+            parameters.append(descriptor)
 
         query += """
             ORDER BY c.name, m.name, m.descriptor
@@ -360,6 +421,32 @@ class BytecodeStore:
             ORDER BY offset
             """,
             (method_id,),
+        ).fetchall()
+
+        return [dict(row) for row in rows]
+
+    def get_method_calls(
+        self,
+        method_id: int,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Return methods called by a method."""
+
+        rows = self.connection.execute(
+            """
+            SELECT
+                id,
+                caller_method_id,
+                target_class,
+                target_method,
+                target_descriptor,
+                opcode
+            FROM method_calls
+            WHERE caller_method_id = ?
+            ORDER BY id
+            LIMIT ?
+            """,
+            (method_id, limit),
         ).fetchall()
 
         return [dict(row) for row in rows]

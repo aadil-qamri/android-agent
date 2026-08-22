@@ -33,7 +33,8 @@ class ModelProvider:
             "search_android_class": self.knowledge.search_class,
             "get_android_class": self.knowledge.get_class,
             "search_android_method": self.knowledge.search_method,
-            "get_android_method_instructions": self.knowledge.get_method_instructions,
+            "get_android_method_instructions": (self.knowledge.get_method_instructions),
+            "get_android_method_calls": self.knowledge.get_method_calls,
         }
 
         self.tools = self._create_tools()
@@ -55,18 +56,20 @@ class ModelProvider:
         search_class = types.FunctionDeclaration(
             name="search_android_class",
             description=(
-                "Search the Android framework knowledge database for classes by name."
+                "Search the Android framework knowledge database for classes by name. "
+                "Use this to identify a class and obtain its database ID before "
+                "querying its methods or other class-related data."
             ),
             parameters_json_schema={
                 "type": "object",
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": ("Class name or part of a class name."),
+                        "description": "Class name or part of a class name.",
                     },
                     "limit": {
                         "type": "integer",
-                        "description": ("Maximum number of matching classes."),
+                        "description": "Maximum number of matching classes.",
                         "default": 20,
                     },
                 },
@@ -95,18 +98,21 @@ class ModelProvider:
         search_method = types.FunctionDeclaration(
             name="search_android_method",
             description=(
-                "Search the Android framework knowledge database for methods by name."
+                "Search the Android framework knowledge database for methods by name. "
+                "Use the class_name parameter when the method must be found within "
+                "a specific class. Use this after identifying a class when you need "
+                "a method ID for further method-level queries."
             ),
             parameters_json_schema={
                 "type": "object",
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": ("Method name or part of a method name."),
+                        "description": "Method name or part of a method name.",
                     },
                     "limit": {
                         "type": "integer",
-                        "description": ("Maximum number of matching methods."),
+                        "description": "Maximum number of matching methods.",
                         "default": 20,
                     },
                     "class_name": {
@@ -124,8 +130,9 @@ class ModelProvider:
         get_instructions = types.FunctionDeclaration(
             name="get_android_method_instructions",
             description=(
-                "Get the DEX instructions for an Android framework "
-                "method using its database ID."
+                "Get the DEX instructions for an Android framework method "
+                "using its database ID. Use this tool when instruction-level "
+                "behavior needs to be verified from the knowledge database."
             ),
             parameters_json_schema={
                 "type": "object",
@@ -139,6 +146,30 @@ class ModelProvider:
             },
         )
 
+        get_method_calls = types.FunctionDeclaration(
+            name="get_android_method_calls",
+            description=(
+                "Get the methods actually called by an Android framework method "
+                "using its database ID. Use this when the user asks what methods "
+                "a method calls, invokes, or delegates to."
+            ),
+            parameters_json_schema={
+                "type": "object",
+                "properties": {
+                    "method_id": {
+                        "type": "integer",
+                        "description": "Database ID of the caller method.",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of method calls to return.",
+                        "default": 50,
+                    },
+                },
+                "required": ["method_id"],
+            },
+        )
+
         return [
             types.Tool(
                 function_declarations=[
@@ -146,6 +177,7 @@ class ModelProvider:
                     get_class,
                     search_method,
                     get_instructions,
+                    get_method_calls,
                 ]
             )
         ]
@@ -200,7 +232,7 @@ class ModelProvider:
                     )
                 )
 
-                response = self.chat.send_message(function_response_parts)
+            response = self.chat.send_message(function_response_parts)
 
         if response.text:
             return response.text.strip()

@@ -42,6 +42,7 @@ class AndroidKnowledgeTool:
         name: str,
         limit: int = 20,
         class_name: str | None = None,
+        descriptor: str | None = None,
     ) -> list[dict[str, Any]]:
         """Search for Android methods by name."""
 
@@ -49,6 +50,7 @@ class AndroidKnowledgeTool:
             name=name,
             limit=limit,
             class_name=class_name,
+            descriptor=descriptor,
         )
 
     def get_method_instructions(
@@ -58,6 +60,18 @@ class AndroidKnowledgeTool:
         """Get the instructions belonging to a method."""
 
         return self.store.get_instructions(method_id)
+
+    def get_method_calls(
+        self,
+        method_id: int,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Get methods called by a method."""
+
+        return self.store.get_method_calls(
+            method_id=method_id,
+            limit=limit,
+        )
 
     def close(self) -> None:
         """Close the underlying knowledge database."""

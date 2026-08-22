@@ -29,14 +29,10 @@ class Scanner:
         """
 
         if not self.root.exists():
-            raise FileNotFoundError(
-                f"Directory not found: {self.root}"
-            )
+            raise FileNotFoundError(f"Directory not found: {self.root}")
 
         if not self.root.is_dir():
-            raise NotADirectoryError(
-                f"Not a directory: {self.root}"
-            )
+            raise NotADirectoryError(f"Not a directory: {self.root}")
 
         files: list[Path] = []
 
