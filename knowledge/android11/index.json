@@ -5,9 +5,19 @@
         "parent": "knowledge/android11",
         "extension": ".db",
         "type": "unknown",
-        "size": 53248,
-        "modified": 1786812390.482937,
-        "sha256": "7a8b039fd08d8dff831fad4ea308c9ba4497859fbfe667e07abb86818ef8eed0"
+        "size": 477855744,
+        "modified": 1787416995.3782177,
+        "sha256": "d01be950b6940524f4bd7ea69bf61cddb579d40f2ab56fdb03d29e25869cff39"
+    },
+    {
+        "name": "bytecode.db.before-method-calls",
+        "path": "knowledge/android11/bytecode.db.before-method-calls",
+        "parent": "knowledge/android11",
+        "extension": ".before-method-calls",
+        "type": "unknown",
+        "size": 477855744,
+        "modified": 1787417598.9311776,
+        "sha256": "d01be950b6940524f4bd7ea69bf61cddb579d40f2ab56fdb03d29e25869cff39"
     },
     {
         "name": "product_build.prop",

@@ -7,6 +7,16 @@ from androguard.core.dex import DEX
 
 jar_path = Path("knowledge/android11/raw/framework.jar")
 
+wanted = {
+    "invoke-direct",
+    "invoke-virtual",
+    "invoke-static",
+    "invoke-interface",
+    "invoke-super",
+}
+
+found = set()
+
 with zipfile.ZipFile(jar_path) as jar:
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir) / "classes.dex"
@@ -15,75 +25,42 @@ with zipfile.ZipFile(jar_path) as jar:
             temp_path.write_bytes(src.read())
 
         dex = DEX(temp_path.read_bytes())
-        dex_classes = dex.get_classes()
 
-        print(type(dex_classes[0]))
-        print()
-
-        cls = dex_classes[0]
-
-        print("Name:", cls.get_name())
-        print("Superclass:", cls.get_superclassname())
-        print("Interfaces:", cls.get_interfaces())
-        print("Access:", cls.get_access_flags_string())
-
-        methods = cls.get_methods()
-
-        print(f"\nMethod count: {len(methods)}")
-
-        if methods:
-            method = methods[0]
-
-            print(type(method))
-            print()
-
-            print("Name:", method.get_name())
-            print("Descriptor:", method.get_descriptor())
-            print("Access:", method.get_access_flags_string())
-            print("Class:", method.get_class_name())
-            print("Short:", method.get_short_string())
-
-            code = method.get_code()
-
-            print("\nCode:", code)
-            print("Code type:", type(code))
-
-            if code is not None:
-                instructions = method.get_instructions()
-
-                print("\nInstructions type:", type(instructions))
-
-                for instruction in method.get_instructions():
-                    hex_data = instruction.get_hex()
-                    print(type(instruction))
-                    print("Name:", instruction.get_name())
-                    print("Output:", instruction.get_output())
-                    print("Size:", instruction.get_length())
-                    print("get_length():", instruction.get_length())
-                    print("Hex:", hex_data)
-                    print("Hex byte length:", len(hex_data.split()))
-                    print()
-
-        print("\nSearching for method without code...")
-
-        found = False
-
-        for cls in dex_classes:
+        for cls in dex.get_classes():
             for method in cls.get_methods():
                 code = method.get_code()
 
                 if code is None:
-                    print("\nFound method without code:")
-                    print("Class:", cls.get_name())
-                    print("Name:", method.get_name())
-                    print("Descriptor:", method.get_descriptor())
-                    print("Access:", method.get_access_flags_string())
+                    continue
 
-                    found = True
+                for instruction in method.get_instructions():
+                    opcode = instruction.get_name()
+
+                    if opcode not in wanted or opcode in found:
+                        continue
+
+                    print("=" * 60)
+                    print("Class:", cls.get_name())
+                    print("Method:", method.get_name())
+                    print("Descriptor:", method.get_descriptor())
+                    print("Instruction type:", type(instruction))
+                    print("Opcode:", opcode)
+                    print("Output:", instruction.get_output())
+                    print("Operands:", instruction.get_operands())
+                    print("Ref kind:", instruction.get_ref_kind())
+                    print("Hex:", instruction.get_hex())
+
+                    found.add(opcode)
+
+                    if found == wanted:
+                        break
+
+                if found == wanted:
                     break
 
-            if found:
+            if found == wanted:
                 break
 
-        if not found:
-            print("No method without code found.")
+print()
+print("Found:", sorted(found))
+print("Missing:", sorted(wanted - found))

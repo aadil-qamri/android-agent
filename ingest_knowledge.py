@@ -27,8 +27,8 @@ def main() -> None:
         output = root / "index.json"
 
         ingestor.save(output, records)
-        print(f"Ingested {len(records)} files.")
         print(f"Saved index to: {output}")
+        print(f"Saved bytecode database to: {root / 'bytecode.db'}")
 
     finally:
         ingestor.close()
