@@ -35,6 +35,7 @@ class ModelProvider:
             "search_android_method": self.knowledge.search_method,
             "get_android_method_instructions": (self.knowledge.get_method_instructions),
             "get_android_method_calls": self.knowledge.get_method_calls,
+            "find_android_method_callers": self.knowledge.find_method_callers,
         }
 
         self.tools = self._create_tools()
@@ -177,6 +178,42 @@ class ModelProvider:
             },
         )
 
+        find_method_callers = types.FunctionDeclaration(
+            name="find_android_method_callers",
+            description=(
+                "Find Android framework methods that call a specified target "
+                "method. Use this when the user asks what calls, depends on, "
+                "or references a particular method."
+            ),
+            parameters_json_schema={
+                "type": "object",
+                "properties": {
+                    "target_class": {
+                        "type": "string",
+                        "description": "DEX class name of the target method.",
+                    },
+                    "target_method": {
+                        "type": "string",
+                        "description": "Name of the target method.",
+                    },
+                    "target_descriptor": {
+                        "type": "string",
+                        "description": "DEX descriptor of the target method.",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of callers to return.",
+                        "default": 50,
+                    },
+                },
+                "required": [
+                    "target_class",
+                    "target_method",
+                    "target_descriptor",
+                ],
+            },
+        )
+
         return [
             types.Tool(
                 function_declarations=[
@@ -185,6 +222,7 @@ class ModelProvider:
                     search_method,
                     get_instructions,
                     get_method_calls,
+                    find_method_callers,
                 ]
             )
         ]

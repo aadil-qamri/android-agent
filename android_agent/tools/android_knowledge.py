@@ -73,6 +73,22 @@ class AndroidKnowledgeTool:
             limit=limit,
         )
 
+    def find_method_callers(
+        self,
+        target_class: str,
+        target_method: str,
+        target_descriptor: str,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Find methods that call the specified method."""
+
+        return self.store.find_method_callers(
+            target_class=target_class,
+            target_method=target_method,
+            target_descriptor=target_descriptor,
+            limit=limit,
+        )
+
     def close(self) -> None:
         """Close the underlying knowledge database."""
 

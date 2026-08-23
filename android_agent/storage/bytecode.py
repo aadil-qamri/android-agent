@@ -451,6 +451,48 @@ class BytecodeStore:
 
         return [dict(row) for row in rows]
 
+    def find_method_callers(
+            self,
+            target_class: str,
+            target_method: str,
+            target_descriptor: str,
+            limit: int = 50,
+        ) -> list[dict[str, Any]]:
+            """Find methods that call the specified method."""
+
+            rows = self.connection.execute(
+                """
+            SELECT
+                mc.id,
+                mc.caller_method_id,
+                mc.target_class,
+                mc.target_method,
+                mc.target_descriptor,
+                mc.opcode,
+                m.name AS caller_method,
+                m.descriptor AS caller_descriptor,
+                c.name AS caller_class
+            FROM method_calls AS mc
+            JOIN methods AS m
+                ON m.id = mc.caller_method_id
+            JOIN classes AS c
+                ON c.id = m.class_id
+            WHERE mc.target_class = ?
+                AND mc.target_method = ?
+                AND mc.target_descriptor = ?
+            ORDER BY mc.id
+            LIMIT ?
+            """,
+                (
+                    target_class,
+                    target_method,
+                    target_descriptor,
+                    limit,
+                ),
+            ).fetchall()
+
+            return [dict(row) for row in rows]
+
     # ------------------------------------------------------------------
     # Transaction / lifecycle methods
     # ------------------------------------------------------------------
