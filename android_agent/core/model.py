@@ -99,9 +99,9 @@ class ModelProvider:
             name="search_android_method",
             description=(
                 "Search the Android framework knowledge database for methods by name. "
-                "Use the class_name parameter when the method must be found within "
-                "a specific class. Use this after identifying a class when you need "
-                "a method ID for further method-level queries."
+                "Use class_name to restrict the search to a specific class. "
+                "Use descriptor when the exact method signature is known. "
+                "Use this when you need a method ID for further method-level queries."
             ),
             parameters_json_schema={
                 "type": "object",
@@ -120,6 +120,13 @@ class ModelProvider:
                         "description": (
                             "Optional fully qualified DEX class name to restrict "
                             "the method search to."
+                        ),
+                    },
+                    "descriptor": {
+                        "type": "string",
+                        "description": (
+                            "Optional DEX method descriptor, such as ()V or "
+                            "(I)Ljava/lang/String;."
                         ),
                     },
                 },
